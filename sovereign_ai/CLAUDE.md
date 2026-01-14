@@ -19,6 +19,9 @@ python -m sovereign_ai.cli input.pdf -o output/ --image-format png
 
 # 擷取特定頁面
 python -m sovereign_ai.cli input.pdf -o output/ --pages 1,3,5
+
+# 只擷取文字（不擷取圖片）
+python -m sovereign_ai.cli input.pdf -o output/ --no-images
 ```
 
 ### 使用 Python API
@@ -30,7 +33,8 @@ from pathlib import Path
 result = extract_pdf_to_json(
     pdf_path=Path("input.pdf"),
     output_dir=Path("output"),
-    image_format="auto"  # 自動保留原始格式
+    image_format="auto",  # 自動保留原始格式
+    save_images=True      # 設為 False 可跳過圖片擷取
 )
 ```
 
@@ -101,3 +105,4 @@ conda activate pypdfium2
 | `image_format` | `"auto"` | 圖片格式：`auto`/`png`/`jpg` |
 | `pages` | `None` | 指定頁碼（1-based），None 表示所有頁面 |
 | `save_json` | `True` | 是否儲存 JSON 檔案 |
+| `save_images` | `True` | 是否擷取並儲存圖片 |

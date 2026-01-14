@@ -39,6 +39,9 @@ Examples:
 
   # Extract specific pages only
   python -m sovereign_ai.cli input.pdf -o output/ --pages 1,3,5
+
+  # Extract text only (no images)
+  python -m sovereign_ai.cli input.pdf -o output/ --no-images
 """
     )
 
@@ -67,6 +70,12 @@ Examples:
         type=str,
         default=None,
         help="Comma-separated list of page numbers to extract (1-based). Default: all pages"
+    )
+
+    parser.add_argument(
+        "--no-images",
+        action="store_true",
+        help="Skip image extraction (extract text only)"
     )
 
     parser.add_argument(
@@ -118,16 +127,19 @@ def main():
             pdf_path=args.pdf,
             output_dir=args.output,
             image_format=args.image_format,
-            pages=pages
+            pages=pages,
+            save_images=not args.no_images
         )
 
         # Print summary
-        total_images = sum(len(page["images"]) for page in result)
+        total_images = sum(len(page.get("images", [])) for page in result)
+        suffix = "w-images" if not args.no_images else "wo-images"
+        json_filename = f"{args.pdf.stem}-{suffix}.json"
         print(f"\nExtraction complete:")
         print(f"  Pages processed: {len(result)}")
         print(f"  Images extracted: {total_images}")
         print(f"  Output directory: {args.output}")
-        print(f"  JSON file: {args.output / (args.pdf.stem + '.json')}")
+        print(f"  JSON file: {args.output / json_filename}")
 
     except Exception as e:
         logging.error(f"Extraction failed: {e}")

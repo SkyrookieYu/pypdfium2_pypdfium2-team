@@ -2,6 +2,49 @@
 
 此檔案記錄 sovereign_ai 模組的重要變更。
 
+## [0.3.0] - 2026-01-14
+
+### Added
+- 新增 `save_images` 參數，可選擇是否擷取圖片（預設: `True`）
+- 新增 CLI 選項 `--no-images`，跳過圖片擷取
+
+### Changed
+- JSON 檔名格式改為 `{pdf名稱}-w-images.json`（有圖片）或 `{pdf名稱}-wo-images.json`（無圖片）
+- 無圖片模式下，JSON 輸出簡化為只有 `pageNo` 和 `words` 欄位
+
+### JSON 輸出格式
+
+**有圖片模式** (`save_images=True`):
+```json
+[
+  {
+    "pageNo": 1,
+    "width": 595.3,
+    "height": 841.9,
+    "words": "純文字內容...",
+    "images": [
+      {
+        "index": 0,
+        "path": "images/mydoc_page1_img1.png",
+        "bounds": [100.0, 200.0, 300.0, 400.0]
+      }
+    ]
+  }
+]
+```
+
+**無圖片模式** (`--no-images` 或 `save_images=False`):
+```json
+[
+  {
+    "pageNo": 1,
+    "words": "純文字內容..."
+  }
+]
+```
+
+---
+
 ## [0.2.0] - 2026-01-10
 
 ### Added

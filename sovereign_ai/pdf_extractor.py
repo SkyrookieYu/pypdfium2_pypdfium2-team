@@ -26,7 +26,8 @@ def extract_page(
     page_index: int,
     output_dir: Path,
     pdf_stem: str,
-    image_format: str = "auto"
+    image_format: str = "auto",
+    save_images: bool = True
 ) -> dict:
     """
     Extract text and images from a single PDF page.
@@ -37,6 +38,7 @@ def extract_page(
         output_dir: Base output directory for images
         pdf_stem: PDF filename without extension (for image naming)
         image_format: Image output format - "auto", "png", or "jpg"
+        save_images: Whether to extract and save images (default: True)
 
     Returns:
         Dictionary with page data:
@@ -54,35 +56,42 @@ def extract_page(
     width = page.get_width()
     height = page.get_height()
 
-    # Extract images
-    images = extract_images_from_page(
-        page=page,
-        page_index=page_index,
-        output_dir=output_dir,
-        pdf_stem=pdf_stem,
-        image_format=image_format
-    )
+    # Extract images (if enabled)
+    if save_images:
+        images = extract_images_from_page(
+            page=page,
+            page_index=page_index,
+            output_dir=output_dir,
+            pdf_stem=pdf_stem,
+            image_format=image_format
+        )
+    else:
+        images = []
 
     # Extract text (pure text, no image links)
     text = extract_full_text(page)
 
-    # Build images metadata
-    images_metadata = [
-        {
-            "index": img.index,
-            "path": img.path,
-            "bounds": list(img.bounds)
+    # Build result
+    if save_images:
+        return {
+            "pageNo": page_num,
+            "width": width,
+            "height": height,
+            "words": text,
+            "images": [
+                {
+                    "index": img.index,
+                    "path": img.path,
+                    "bounds": list(img.bounds)
+                }
+                for img in images
+            ]
         }
-        for img in images
-    ]
-
-    return {
-        "pageNo": page_num,
-        "width": width,
-        "height": height,
-        "words": text,
-        "images": images_metadata
-    }
+    else:
+        return {
+            "pageNo": page_num,
+            "words": text,
+        }
 
 
 def extract_pdf_to_json(
@@ -90,7 +99,8 @@ def extract_pdf_to_json(
     output_dir: Path,
     image_format: str = "auto",
     pages: Optional[list[int]] = None,
-    save_json: bool = True
+    save_json: bool = True,
+    save_images: bool = True
 ) -> list[dict]:
     """
     Extract text and images from a PDF file and output as JSON.
@@ -105,6 +115,7 @@ def extract_pdf_to_json(
         image_format: Image format - "auto" (preserve original), "png", or "jpg"
         pages: List of page numbers to extract (1-based). None for all pages.
         save_json: Whether to save the JSON file to disk
+        save_images: Whether to extract and save images (default: True)
 
     Returns:
         List of page dictionaries:
@@ -150,13 +161,15 @@ def extract_pdf_to_json(
             page_index=page_index,
             output_dir=output_dir,
             pdf_stem=pdf_stem,
-            image_format=image_format
+            image_format=image_format,
+            save_images=save_images
         )
         result.append(page_data)
 
     # Save JSON
     if save_json:
-        json_filename = pdf_path.stem + ".json"
+        suffix = "w-images" if save_images else "wo-images"
+        json_filename = f"{pdf_path.stem}-{suffix}.json"
         json_path = output_dir / json_filename
 
         with open(json_path, "w", encoding="utf-8") as f:
